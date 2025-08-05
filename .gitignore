@@ -1,0 +1,25 @@
+# Go template
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+storage/
+tmp/
+node_modules/
+coverage.out
+.coverage.txt
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Environment variables file
+.env**
+
+# Local data
+data/**
