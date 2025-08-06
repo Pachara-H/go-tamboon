@@ -1,3 +1,4 @@
+// Package utilities is a common function for general purpose
 package utilities
 
 import (
