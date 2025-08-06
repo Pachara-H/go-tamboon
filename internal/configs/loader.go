@@ -1,9 +1,12 @@
 package configs
 
 import (
+	"encoding/base64"
 	"time"
 
+	Code "github.com/Pachara-H/go-tamboon/internal/errorcode"
 	"github.com/Pachara-H/go-tamboon/pkg/constants"
+	Error "github.com/Pachara-H/go-tamboon/pkg/errors"
 	"github.com/Pachara-H/go-tamboon/pkg/utilities"
 	"go.openly.dev/pointy"
 )
@@ -21,10 +24,11 @@ type Config struct {
 
 // OmiseConfig holds Omise API configuration
 type OmiseConfig struct {
-	PublicKey string
-	SecretKey string
-	BaseURL   string
-	Timeout   time.Duration
+	PublicKey     string
+	SecretKey     string
+	TokenBaseURL  string
+	ChargeBaseURL string
+	Timeout       time.Duration
 }
 
 // LoadConfig loads configuration from environment variables
@@ -35,16 +39,30 @@ func (e *loader) LoadConfig() (*Config, error) {
 	}
 
 	// Load Omise configuration
-	config.Omise = pointy.PointerValue(e.loadOmiseConfig(), OmiseConfig{})
+	omiseCfg, err := e.loadOmiseConfig()
+	if err != nil {
+		return nil, err
+	}
+	config.Omise = pointy.PointerValue(omiseCfg, OmiseConfig{})
 
 	return config, nil
 }
 
-func (e *loader) loadOmiseConfig() *OmiseConfig {
-	return &OmiseConfig{
-		PublicKey: utilities.GetEnvCfgStringOrDefault("OMISE_PUBLIC_KEY"),
-		SecretKey: utilities.GetEnvCfgStringOrDefault("OMISE_SECRET_KEY"),
-		BaseURL:   utilities.GetEnvCfgStringOrDefault("OMISE_BASE_URL"),
-		Timeout:   time.Duration(utilities.GetEnvCfgInt64OrDefault("OMISE_TIMEOUT") * int64(time.Second)),
+func (e *loader) loadOmiseConfig() (*OmiseConfig, error) {
+	pKeyByte, err := base64.StdEncoding.DecodeString(utilities.GetEnvCfgStringOrDefault("OMISE_PUBLIC_KEY"))
+	if err != nil {
+		return nil, Error.NewInternalServerError(Code.FailToLoadOmiseConfigPublicKey)
 	}
+	sKeyByte, err := base64.StdEncoding.DecodeString(utilities.GetEnvCfgStringOrDefault("OMISE_SECRET_KEY"))
+	if err != nil {
+		return nil, Error.NewInternalServerError(Code.FailToLoadOmiseConfigSecretKey)
+	}
+
+	return &OmiseConfig{
+		PublicKey:     string(pKeyByte),
+		SecretKey:     string(sKeyByte),
+		TokenBaseURL:  utilities.GetEnvCfgStringOrDefault("OMISE_TOKEN_BASE_URL"),
+		ChargeBaseURL: utilities.GetEnvCfgStringOrDefault("OMISE_CHARGE_BASE_URL"),
+		Timeout:       time.Duration(utilities.GetEnvCfgInt64OrDefault("OMISE_TIMEOUT") * int64(time.Second)),
+	}, nil
 }
