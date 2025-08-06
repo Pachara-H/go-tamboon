@@ -41,8 +41,16 @@ const (
 	FailMissingCSVColumnName
 	// FailConvertingCSVAmount represent error code when converting CSV amount failed
 	FailConvertingCSVAmount
+	// FailConvertingCSVCVV  represent error code when converting CSV cvv failed
+	FailConvertingCSVCVV
 	// FailConvertingCSVExpMonth  represent error code when converting CSV exp month failed
 	FailConvertingCSVExpMonth
 	// FailConvertingCSVExpYear represent error code when converting CSV exp year failed
 	FailConvertingCSVExpYear
+)
+
+// define error code for adapter.omise package
+const (
+	// FailInitOmiseClient represent error code when initial omise client failed
+	FailInitOmiseClient = iota + 5001
 )

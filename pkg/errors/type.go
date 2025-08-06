@@ -1,5 +1,7 @@
 package errors
 
+import "fmt"
+
 type commonError struct {
 	Message string
 	Status  int
@@ -12,7 +14,7 @@ type badRequestError struct {
 
 // Error for implement error interface
 func (e *badRequestError) Error() string {
-	return e.data.Message
+	return fmt.Sprintf("%s (%d)", e.data.Message, e.data.Code)
 }
 
 type unauthorizedError struct {
@@ -21,7 +23,7 @@ type unauthorizedError struct {
 
 // Error for implement error interface
 func (e *unauthorizedError) Error() string {
-	return e.data.Message
+	return fmt.Sprintf("%s (%d)", e.data.Message, e.data.Code)
 }
 
 type notFoundError struct {
@@ -30,7 +32,7 @@ type notFoundError struct {
 
 // Error for implement error interface
 func (e *notFoundError) Error() string {
-	return e.data.Message
+	return fmt.Sprintf("%s (%d)", e.data.Message, e.data.Code)
 }
 
 type unsupportedMediaTypeError struct {
@@ -39,7 +41,7 @@ type unsupportedMediaTypeError struct {
 
 // Error for implement error interface
 func (e *unsupportedMediaTypeError) Error() string {
-	return e.data.Message
+	return fmt.Sprintf("%s (%d)", e.data.Message, e.data.Code)
 }
 
 type tooManyRequestsError struct {
@@ -48,7 +50,7 @@ type tooManyRequestsError struct {
 
 // Error for implement error interface
 func (e *tooManyRequestsError) Error() string {
-	return e.data.Message
+	return fmt.Sprintf("%s (%d)", e.data.Message, e.data.Code)
 }
 
 type internalServerError struct {
@@ -57,5 +59,5 @@ type internalServerError struct {
 
 // Error for implement error interface
 func (e *internalServerError) Error() string {
-	return e.data.Message
+	return fmt.Sprintf("%s (%d)", e.data.Message, e.data.Code)
 }
