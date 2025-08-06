@@ -9,16 +9,18 @@ const (
 	msgBadRequestError      = "Invalid data or parameter"
 	msgUnauthorizedError    = "Unauthorized"
 	msgNotFoundError        = "Data was not found"
+	msgUnsupportedMediaType = "Unsupported media type"
 	msgTooManyRequestsError = "Too many requests"
 	msgInternalServerError  = "Internal system error"
 )
 
 var getMessage = map[int]string{
-	fiber.StatusBadRequest:          msgBadRequestError,
-	fiber.StatusUnauthorized:        msgUnauthorizedError,
-	fiber.StatusNotFound:            msgNotFoundError,
-	fiber.StatusTooManyRequests:     msgTooManyRequestsError,
-	fiber.StatusInternalServerError: msgInternalServerError,
+	fiber.StatusBadRequest:           msgBadRequestError,
+	fiber.StatusUnauthorized:         msgUnauthorizedError,
+	fiber.StatusNotFound:             msgNotFoundError,
+	fiber.StatusUnsupportedMediaType: msgUnsupportedMediaType,
+	fiber.StatusTooManyRequests:      msgTooManyRequestsError,
+	fiber.StatusInternalServerError:  msgInternalServerError,
 }
 
 // NewBadRequestError for initial new bad request error
@@ -39,6 +41,13 @@ func NewUnauthorizedError(code int, message ...string) error {
 func NewNotFoundError(code int, message ...string) error {
 	return &notFoundError{
 		data: setErrorData(fiber.StatusNotFound, code, message...),
+	}
+}
+
+// NewUnsupportedMediaTypeError for initial new unsupported media type error
+func NewUnsupportedMediaTypeError(code int, message ...string) error {
+	return &unsupportedMediaTypeError{
+		data: setErrorData(fiber.StatusUnsupportedMediaType, code, message...),
 	}
 }
 
