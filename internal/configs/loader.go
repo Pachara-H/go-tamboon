@@ -24,8 +24,8 @@ type Config struct {
 
 // OmiseConfig holds Omise API configuration
 type OmiseConfig struct {
-	PublicKey     string
-	SecretKey     string
+	PublicKey     *utilities.SecureString
+	SecretKey     *utilities.SecureString
 	TokenBaseURL  string
 	ChargeBaseURL string
 	Timeout       time.Duration
@@ -59,10 +59,17 @@ func (e *loader) loadOmiseConfig() (*OmiseConfig, error) {
 	}
 
 	return &OmiseConfig{
-		PublicKey:     string(pKeyByte),
-		SecretKey:     string(sKeyByte),
+		PublicKey:     utilities.NewSecureStringFromByte(pKeyByte),
+		SecretKey:     utilities.NewSecureStringFromByte(sKeyByte),
 		TokenBaseURL:  utilities.GetEnvCfgStringOrDefault("OMISE_TOKEN_BASE_URL"),
 		ChargeBaseURL: utilities.GetEnvCfgStringOrDefault("OMISE_CHARGE_BASE_URL"),
 		Timeout:       time.Duration(utilities.GetEnvCfgInt64OrDefault("OMISE_TIMEOUT") * int64(time.Second)),
 	}, nil
+}
+
+// ClearConfig set pointer variable to null
+func (e *loader) ClearConfig(cfg *Config) {
+	cfg.Omise.PublicKey.Clear()
+	cfg.Omise.SecretKey.Clear()
+	cfg = nil
 }

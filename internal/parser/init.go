@@ -6,6 +6,7 @@ import "github.com/Pachara-H/go-tamboon/pkg/utilities"
 // Agent is parser agent interface
 type Agent interface {
 	ConvertCSV(content *utilities.SecureByte) (CSVRowsData, error)
+	ClearCSVData(data CSVRowsData)
 }
 
 // agent is parser agent struct

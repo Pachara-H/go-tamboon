@@ -85,14 +85,21 @@ func (a *agent) ConvertCSV(content *utilities.SecureByte) (CSVRowsData, error) {
 		}
 
 		name := utilities.NewSecureString(record[nameIdx])
-		amount, err := decimal.NewFromString(record[amountIdx])
+		a, err := decimal.NewFromString(record[amountIdx])
 		if err != nil {
+			return nil, Error.NewInternalServerError(Code.FailConvertingCSVAmount)
+		}
+		amount, err := decimal.NewFromString(a.String()) // for remove zero tailing in digits
+		if err != nil || amount.IsNegative() || -amount.Exponent() > 0 {
 			return nil, Error.NewInternalServerError(Code.FailConvertingCSVAmount)
 		}
 		cardNumber := utilities.NewSecureString(record[cardNumberIdx])
 		cvv := utilities.NewSecureString(record[cvvIdx])
+		if cvv.Len() != 3 {
+			return nil, Error.NewInternalServerError(Code.FailConvertingCSVCVV)
+		}
 		expMonth, err := strconv.Atoi(record[expMonthIdx])
-		if err != nil {
+		if err != nil || expMonth < 1 || expMonth > 12 {
 			return nil, Error.NewInternalServerError(Code.FailConvertingCSVExpMonth)
 		}
 		expYear, err := strconv.Atoi(record[expYearIdx])
@@ -111,4 +118,13 @@ func (a *agent) ConvertCSV(content *utilities.SecureByte) (CSVRowsData, error) {
 	}
 
 	return rows, nil
+}
+
+// ClearCSVData set pointer variable to null
+func (a *agent) ClearCSVData(data CSVRowsData) {
+	for _, d := range data {
+		d.Name.Clear()
+		d.CardNumber.Clear()
+		d.CVV.Clear()
+	}
 }
