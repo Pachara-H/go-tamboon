@@ -28,3 +28,21 @@ const (
 	// FailRot128Decryption represent error code when rot128 decryption failed
 	FailRot128Decryption
 )
+
+// define error code for parser package
+const (
+	// FailEmptyCSVContent represent error code when CSV content was null or empty
+	FailEmptyCSVContent = iota + 4001
+	// FailReadingCSVRecord represent error code when reading CSV failed/error
+	FailReadingCSVRecord
+	// FailReadingCSVTimeout represent error code when reading CSV timeout
+	FailReadingCSVTimeout
+	// FailMissingCSVColumnName represent error code when cannot found some expected column
+	FailMissingCSVColumnName
+	// FailConvertingCSVAmount represent error code when converting CSV amount failed
+	FailConvertingCSVAmount
+	// FailConvertingCSVExpMonth  represent error code when converting CSV exp month failed
+	FailConvertingCSVExpMonth
+	// FailConvertingCSVExpYear represent error code when converting CSV exp year failed
+	FailConvertingCSVExpYear
+)
