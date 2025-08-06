@@ -33,6 +33,15 @@ func (e *notFoundError) Error() string {
 	return e.data.Message
 }
 
+type unsupportedMediaTypeError struct {
+	data commonError
+}
+
+// Error for implement error interface
+func (e *unsupportedMediaTypeError) Error() string {
+	return e.data.Message
+}
+
 type tooManyRequestsError struct {
 	data commonError
 }
