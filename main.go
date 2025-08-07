@@ -9,16 +9,19 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/Pachara-H/go-tamboon/internal/adapter/csv"
 	"github.com/Pachara-H/go-tamboon/internal/adapter/omise"
 	"github.com/Pachara-H/go-tamboon/internal/cipher"
 	"github.com/Pachara-H/go-tamboon/internal/configs"
-	"github.com/Pachara-H/go-tamboon/internal/parser"
-	"github.com/Pachara-H/go-tamboon/internal/service"
+	"github.com/Pachara-H/go-tamboon/internal/reporter"
+	"github.com/Pachara-H/go-tamboon/internal/services"
 	"github.com/Pachara-H/go-tamboon/internal/validator"
 	"github.com/joho/godotenv"
 )
 
 func main() {
+	fmt.Println("performing donations...")
+
 	// Create context that can be cancelled
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -58,14 +61,21 @@ func main() {
 
 	// Initialize and run donation service
 	cipherAgent := cipher.NewAgent()
-	parserAgent := parser.NewAgent()
 	validatorAgent := validator.NewAgent()
-	omiseClient := omise.NewClient(cfg.Omise.PublicKey, cfg.Omise.SecretKey)
-
-	svcWorker := service.NewWorker(cfg, cipherAgent, parserAgent, validatorAgent, omiseClient)
-	if err := svcWorker.ProcessDonations(ctx); err != nil {
-		log.Fatalf("Failed to process donations: %v", err.Error())
+	reporterAgent := reporter.NewAgent()
+	csvParser := csv.NewParser()
+	omiseClient, err := omise.NewClient(cfg.Omise.PublicKey, cfg.Omise.SecretKey)
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	svcWorker := services.New(cfg, cipherAgent, validatorAgent, reporterAgent, omiseClient, csvParser)
+	go func() {
+		defer cancel()
+		if err := svcWorker.ProcessDonations(ctx); err != nil {
+			log.Fatalf("Failed to process donations: %v", err.Error())
+		}
+	}()
 
 	// Wait for context cancellation (graceful shutdown)
 	<-ctx.Done()

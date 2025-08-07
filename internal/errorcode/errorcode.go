@@ -5,6 +5,8 @@ package errorcode
 const (
 	// FailContextCancel represent error code when context was cancelled
 	FailContextCancel = iota + 1
+	// FailGoroutineTimeout represent error code when go routine timeout
+	FailGoroutineTimeout
 )
 
 // define error code for config package
