@@ -5,6 +5,7 @@ package validator
 type Agent interface {
 	IsFileExist(filePath string) error
 	IsCSVExtension(filePath string) error
+	IsCSVRot128Extension(filePath string) error
 }
 
 // agent is validator agent struct

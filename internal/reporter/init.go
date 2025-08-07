@@ -1,11 +1,15 @@
 // Package reporter is a function for parse content data to struct
 package reporter
 
-import "context"
+import (
+	"context"
+
+	"github.com/Pachara-H/go-tamboon/internal/domains/entities"
+)
 
 // Agent is reporter agent interface
 type Agent interface {
-	PrintSummaryReport(ctx context.Context, data SummaryData)
+	PrintSummaryReport(ctx context.Context, data *entities.DonationSummary)
 }
 
 // agent is parser agent struct

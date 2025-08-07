@@ -2,7 +2,9 @@ package omise
 
 import (
 	"context"
+	"log"
 
+	"github.com/Pachara-H/go-tamboon/internal/domains/entities"
 	Code "github.com/Pachara-H/go-tamboon/internal/errorcode"
 	Error "github.com/Pachara-H/go-tamboon/pkg/errors"
 	"github.com/Pachara-H/go-tamboon/pkg/utilities"
@@ -11,20 +13,26 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func (c *client) Charge(_ context.Context, _, cardNumber, _ *utilities.SecureString, amount decimal.Decimal, _, _ int) (*omiseLib.Charge, error) {
-	omiseClient, err := omiseLib.NewClient(c.publicKey.String(), c.secretKey.String())
+func (c *client) Charge(ctx context.Context, name, cardNumber, cvv *utilities.SecureString, amount decimal.Decimal, expMonth, expYear int) (*entities.ChargeResult, error) {
+	tokenID, err := c.Token(ctx, name, cardNumber, cvv, expMonth, expYear)
 	if err != nil {
-		return nil, Error.NewInternalServerError(Code.FailInitOmiseClient)
+		return nil, err
 	}
 
 	result := &omiseLib.Charge{}
-	if err := omiseClient.Do(result, &operations.CreateCharge{
+	if err := c.omiseClient.Do(result, &operations.CreateCharge{
 		Amount:   amount.IntPart(),
-		Currency: "thb",
-		Card:     cardNumber.String(),
+		Currency: "THB",
+		Card:     tokenID,
 	}); err != nil {
+		log.Printf("[ERROR]: charge error: %v\n", err)
 		return nil, Error.NewInternalServerError(Code.FailChargeError)
 	}
 
-	return result, nil
+	return &entities.ChargeResult{
+		Transaction:    result.Transaction,
+		Status:         entities.ChargeStatus(result.Status),
+		Amount:         decimal.NewFromInt(result.Amount),
+		FailureMessage: result.FailureMessage,
+	}, nil
 }

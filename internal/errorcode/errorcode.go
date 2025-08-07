@@ -1,6 +1,12 @@
 // Package errorcode is a internal service error code for specification
 package errorcode
 
+// define error code for general purpose
+const (
+	// FailContextCancel represent error code when context was cancelled
+	FailContextCancel = iota + 1
+)
+
 // define error code for config package
 const (
 	// FailToLoadOmiseConfigPublicKey represent error code when loading Omise config for public key failed
@@ -15,6 +21,8 @@ const (
 	FailFileNotExisted = iota + 2001
 	// FailCheckingFile represent error code when file checking failed eg. permission
 	FailCheckingFile
+	// FailFileNotRot128 represent error code when file extension is not .rot128
+	FailFileNotRot128
 	// FailFileNotCSV represent error code when file extension is not .csv
 	FailFileNotCSV
 )
@@ -41,10 +49,10 @@ const (
 	FailReadingCSVTimeout
 	// FailMissingCSVColumnName represent error code when cannot found some expected column
 	FailMissingCSVColumnName
+	// FailConvertingCSVName represent error code when converting CSV name failed
+	FailConvertingCSVName
 	// FailConvertingCSVAmount represent error code when converting CSV amount failed
 	FailConvertingCSVAmount
-	// FailConvertingCSVCVV  represent error code when converting CSV cvv failed
-	FailConvertingCSVCVV
 	// FailConvertingCSVExpMonth  represent error code when converting CSV exp month failed
 	FailConvertingCSVExpMonth
 	// FailConvertingCSVExpYear represent error code when converting CSV exp year failed
@@ -55,6 +63,8 @@ const (
 const (
 	// FailInitOmiseClient represent error code when initial omise client failed
 	FailInitOmiseClient = iota + 5001
+	// FailGetTokenError represent error code when get token was error
+	FailGetTokenError
 	// FailChargeCard represent error code when charge was error
 	FailChargeError
 )

@@ -2,6 +2,7 @@ package configs
 
 import (
 	"encoding/base64"
+	"log"
 	"time"
 
 	Code "github.com/Pachara-H/go-tamboon/internal/errorcode"
@@ -51,10 +52,12 @@ func (e *loader) LoadConfig() (*Config, error) {
 func (e *loader) loadOmiseConfig() (*OmiseConfig, error) {
 	pKeyByte, err := base64.StdEncoding.DecodeString(utilities.GetEnvCfgStringOrDefault("OMISE_PUBLIC_KEY"))
 	if err != nil {
+		log.Println("[ERROR]: load Omise public key failed")
 		return nil, Error.NewInternalServerError(Code.FailToLoadOmiseConfigPublicKey)
 	}
 	sKeyByte, err := base64.StdEncoding.DecodeString(utilities.GetEnvCfgStringOrDefault("OMISE_SECRET_KEY"))
 	if err != nil {
+		log.Println("[ERROR]: load Omise secret key failed")
 		return nil, Error.NewInternalServerError(Code.FailToLoadOmiseConfigSecretKey)
 	}
 
@@ -71,5 +74,4 @@ func (e *loader) loadOmiseConfig() (*OmiseConfig, error) {
 func (e *loader) ClearConfig(cfg *Config) {
 	cfg.Omise.PublicKey.Clear()
 	cfg.Omise.SecretKey.Clear()
-	cfg = nil
 }
