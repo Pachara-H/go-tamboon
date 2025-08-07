@@ -10,7 +10,10 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/main.go",
-      "envFile": "${workspaceFolder}/.env"
+      "envFile": "${workspaceFolder}/.env",
+      "args": [
+                "data/fng.1000.csv.rot128",
+            ]
     }
   ]
 }
