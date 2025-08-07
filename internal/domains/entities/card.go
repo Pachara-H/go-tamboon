@@ -16,7 +16,7 @@ type CardDetails struct {
 }
 
 // Clear remove secret value from memory
-func (c CardDetails) Clear() {
+func (c *CardDetails) Clear() {
 	c.Name.Clear()
 	c.CardNumber.Clear()
 	c.CVV.Clear()

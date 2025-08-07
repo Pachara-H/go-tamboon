@@ -7,6 +7,8 @@ const (
 	FailContextCancel = iota + 1
 	// FailGoroutineTimeout represent error code when go routine timeout
 	FailGoroutineTimeout
+	// FailTooManyErrorOccurred represent error code when error keep occurred for a while
+	FailTooManyErrorOccurred
 )
 
 // define error code for config package

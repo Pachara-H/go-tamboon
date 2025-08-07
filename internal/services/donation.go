@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Pachara-H/go-tamboon/internal/domains/entities"
@@ -18,9 +19,12 @@ func (w *donationService) ProcessDonations(ctx context.Context) error { //nolint
 	// 0. defer recover
 	defer func() {
 		if x := recover(); x != nil {
-			log.Fatalf("panic err: %+v", x)
+			log.Printf("panic err: %+v\n", x)
 		}
 	}()
+
+	processingCtx, cancelProcessing := context.WithCancel(ctx)
+	defer cancelProcessing()
 
 	// 1. validate file
 	if err := w.validatorAgent.IsFileExist(w.config.CSVFilePath); err != nil {
@@ -31,18 +35,18 @@ func (w *donationService) ProcessDonations(ctx context.Context) error { //nolint
 	}
 
 	// 2. readfile and decrypt
-	content, err := w.cipherAgent.Rot128DecryptFileContent(ctx, w.config.CSVFilePath)
+	content, err := w.cipherAgent.Rot128DecryptFileContent(processingCtx, w.config.CSVFilePath)
 	if err != nil {
 		return err
 	}
 	defer content.Clear()
 
 	// 3. parse csv
-	records, err := w.csvParser.ParseCSV(ctx, content)
+	records, err := w.csvParser.ParseCSV(processingCtx, content)
+	records = records[:100] // for test only
 	if err != nil {
 		return err
 	}
-	records = records[:20] // for test only
 	defer func() {
 		for _, r := range records {
 			r.Clear()
@@ -59,12 +63,14 @@ func (w *donationService) ProcessDonations(ctx context.Context) error { //nolint
 	ch := make(chan *entities.Donation, len(records))
 
 	sleepTime := 200 * time.Millisecond
+	errCount := int32(0) // prevent blocking from 3rd party
+
 	for _, r := range records {
 		go func(c chan *entities.Donation, r *entities.CardDetails) {
 			defer wg.Done()
 
 			select {
-			case <-ctx.Done():
+			case <-processingCtx.Done():
 				return
 			default:
 				// do nothing
@@ -72,20 +78,29 @@ func (w *donationService) ProcessDonations(ctx context.Context) error { //nolint
 
 			donation := entities.NewDonation(r.Name, r.Amount)
 
-			result, err := w.omiseClient.Charge(ctx, r.Name, r.CardNumber, r.CVV, r.Amount, r.ExpMonth, r.ExpYear)
+			result, err := w.omiseClient.Charge(processingCtx, r.Name, r.CardNumber, r.CVV, r.Amount, r.ExpMonth, r.ExpYear)
 			if err != nil {
+				newCount := atomic.AddInt32(&errCount, 1)
+
 				if strings.Contains(err.Error(), "too_many_requests") {
-					sleepTime += 100 * time.Millisecond // increase sleep time
+					sleepTime = sleepTime * 2 // exponential increase sleep time
+				}
+				if newCount > 30 {
+					log.Println("[ERROR]: too many error was occurred when charge")
+					log.Println("[ERROR]: stopping all remaining tasks...")
+					cancelProcessing()
+					return
 				}
 				donation.MarkAsFailed(err.Error())
 			} else if result.Status != entities.ChargeSuccessful {
 				donation.MarkAsFailed(pointy.PointerValue(result.FailureMessage, ""), result.Transaction)
 			} else {
+				atomic.StoreInt32(&errCount, 0) // reset count
 				donation.MarkAsSuccessful(result.Transaction)
 			}
 
 			select {
-			case <-ctx.Done():
+			case <-processingCtx.Done():
 				return
 			default:
 				c <- donation
@@ -97,15 +112,15 @@ func (w *donationService) ProcessDonations(ctx context.Context) error { //nolint
 	}
 
 	// 5. wait go routine all tasks
-	err = handleWaitGroup(ctx, &wg, ch)
+	err = handleWaitGroup(processingCtx, &wg, ch)
 	if err != nil {
 		return err
 	}
 
 	// 6. print summary report
 	select {
-	case <-ctx.Done():
-		return ctx.Err()
+	case <-processingCtx.Done():
+		return Error.NewInternalServerError(Code.FailContextCancel)
 	default:
 		for d := range ch {
 			donations = append(donations, d)
@@ -113,13 +128,13 @@ func (w *donationService) ProcessDonations(ctx context.Context) error { //nolint
 		}
 		summary.CalculateAveragePerPerson()
 		summary.GenerateTopDonors(donations, 3)
-		w.reporterAgent.PrintSummaryReport(ctx, summary)
+		w.reporterAgent.PrintSummaryReport(processingCtx, summary)
 	}
 
 	return nil
 }
 
-func handleWaitGroup(ctx context.Context, wg *sync.WaitGroup, ch chan *entities.Donation) error {
+func handleWaitGroup(processingCtx context.Context, wg *sync.WaitGroup, ch chan *entities.Donation) error {
 	allDone := make(chan struct{})
 	go func() {
 		wg.Wait()
@@ -127,7 +142,7 @@ func handleWaitGroup(ctx context.Context, wg *sync.WaitGroup, ch chan *entities.
 	}()
 
 	select {
-	case <-ctx.Done():
+	case <-processingCtx.Done():
 		close(ch)
 		return nil
 	case <-allDone:
