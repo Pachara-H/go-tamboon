@@ -2,6 +2,8 @@
 package omise
 
 import (
+	"context"
+
 	"github.com/Pachara-H/go-tamboon/pkg/utilities"
 	omiseLib "github.com/omise/omise-go"
 	"github.com/shopspring/decimal"
@@ -9,7 +11,7 @@ import (
 
 // Client is omise client interface
 type Client interface {
-	Charge(name, cardNumber, cvv *utilities.SecureString, amount decimal.Decimal, expMonth, expYear int) (*omiseLib.Charge, error)
+	Charge(ctx context.Context, name, cardNumber, cvv *utilities.SecureString, amount decimal.Decimal, expMonth, expYear int) (*omiseLib.Charge, error)
 }
 
 // client is omise client struct

@@ -2,6 +2,7 @@ package cipher
 
 import (
 	"bytes"
+	"context"
 	"os"
 
 	Code "github.com/Pachara-H/go-tamboon/internal/errorcode"
@@ -10,7 +11,7 @@ import (
 )
 
 // Rot128DecryptFileContent decrypt file content with rot128 (Caesar) method
-func (a *agent) Rot128DecryptFileContent(path string) (*utilities.SecureByte, error) {
+func (a *agent) Rot128DecryptFileContent(_ context.Context, path string) (*utilities.SecureByte, error) {
 	contentByte, err := os.ReadFile(path) //nolint
 	if err != nil {
 		return nil, Error.NewInternalServerError(Code.FailReadFileContent)

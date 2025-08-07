@@ -1,6 +1,7 @@
 package reporter
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/shopspring/decimal"
@@ -16,7 +17,7 @@ type SummaryData struct {
 }
 
 // PrintSummaryReport print result
-func (a *agent) PrintSummaryReport(data SummaryData) {
+func (a *agent) PrintSummaryReport(_ context.Context, data SummaryData) {
 	// Print summary report
 	fmt.Println("done.")
 	fmt.Printf("Total received: %d\n", data.TotalReceived.IntPart())

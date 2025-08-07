@@ -1,9 +1,11 @@
 // Package reporter is a function for parse content data to struct
 package reporter
 
+import "context"
+
 // Agent is reporter agent interface
 type Agent interface {
-	PrintSummaryReport(data SummaryData)
+	PrintSummaryReport(ctx context.Context, data SummaryData)
 }
 
 // agent is parser agent struct

@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bytes"
+	"context"
 	"encoding/csv"
 	"errors"
 	"io"
@@ -29,7 +30,7 @@ type CSVRowData struct {
 type CSVRowsData []CSVRowData
 
 // ConvertCSV convert .csv content to struct type
-func (a *agent) ConvertCSV(content *utilities.SecureByte) (CSVRowsData, error) { //nolint
+func (a *agent) ConvertCSV(_ context.Context, content *utilities.SecureByte) (CSVRowsData, error) { //nolint
 	if content.IsEmpty() {
 		return nil, Error.NewNotFoundError(Code.FailEmptyCSVContent)
 	}
@@ -121,7 +122,7 @@ func (a *agent) ConvertCSV(content *utilities.SecureByte) (CSVRowsData, error) {
 }
 
 // ClearCSVData set pointer variable to null
-func (a *agent) ClearCSVData(data CSVRowsData) {
+func (a *agent) ClearCSVData(_ context.Context, data CSVRowsData) {
 	for _, d := range data {
 		d.Name.Clear()
 		d.CardNumber.Clear()

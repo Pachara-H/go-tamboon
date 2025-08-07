@@ -10,7 +10,7 @@ import (
 )
 
 // ProcessDonations implement donation logic
-func (w *worker) ProcessDonations(_ context.Context) error {
+func (w *worker) ProcessDonations(ctx context.Context) error {
 	// 0. defer recover
 	defer func() {
 		if x := recover(); x != nil {
@@ -27,25 +27,25 @@ func (w *worker) ProcessDonations(_ context.Context) error {
 	}
 
 	// 2. readfile and decrypt
-	content, err := w.cipherAgent.Rot128DecryptFileContent(w.config.CSVFilePath)
+	content, err := w.cipherAgent.Rot128DecryptFileContent(ctx, w.config.CSVFilePath)
 	if err != nil {
 		return err
 	}
 	defer content.Clear()
 
 	// 3. parse csv
-	records, err := w.parserAgent.ConvertCSV(content)
+	records, err := w.parserAgent.ConvertCSV(ctx, content)
 	if err != nil {
 		return err
 	}
-	defer w.parserAgent.ClearCSVData(records)
+	defer w.parserAgent.ClearCSVData(ctx, records)
 
 	// 4. call charge
 	var summary reporter.SummaryData
 	for _, r := range records {
 		summary.TotalReceived.Add(r.Amount)
 
-		result, err := w.omiseClient.Charge(r.Name, r.CardNumber, r.CVV, r.Amount, r.ExpMonth, r.ExpYear)
+		result, err := w.omiseClient.Charge(ctx, r.Name, r.CardNumber, r.CVV, r.Amount, r.ExpMonth, r.ExpYear)
 		if err != nil || result.Status != omise.ChargeSuccessful {
 			summary.FaultyDonation.Add(r.Amount)
 			continue
@@ -56,6 +56,6 @@ func (w *worker) ProcessDonations(_ context.Context) error {
 	summary.AveragePerPerson = summary.SuccessfullyDonated.Div(decimal.NewFromInt(int64(len(records))))
 
 	// 5. print summary report
-	w.reporterAgent.PrintSummaryReport(summary)
+	w.reporterAgent.PrintSummaryReport(ctx, summary)
 	return nil
 }

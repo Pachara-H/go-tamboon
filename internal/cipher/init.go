@@ -1,11 +1,15 @@
 // Package cipher is a function for data decryption/encryption
 package cipher
 
-import "github.com/Pachara-H/go-tamboon/pkg/utilities"
+import (
+	"context"
+
+	"github.com/Pachara-H/go-tamboon/pkg/utilities"
+)
 
 // Agent is cipher agent interface
 type Agent interface {
-	Rot128DecryptFileContent(path string) (*utilities.SecureByte, error)
+	Rot128DecryptFileContent(ctx context.Context, path string) (*utilities.SecureByte, error)
 }
 
 // agent is cipher agent struct

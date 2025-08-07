@@ -1,6 +1,8 @@
 package omise
 
 import (
+	"context"
+
 	Code "github.com/Pachara-H/go-tamboon/internal/errorcode"
 	Error "github.com/Pachara-H/go-tamboon/pkg/errors"
 	"github.com/Pachara-H/go-tamboon/pkg/utilities"
@@ -9,7 +11,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func (c *client) Charge(_, cardNumber, _ *utilities.SecureString, amount decimal.Decimal, _, _ int) (*omiseLib.Charge, error) {
+func (c *client) Charge(_ context.Context, _, cardNumber, _ *utilities.SecureString, amount decimal.Decimal, _, _ int) (*omiseLib.Charge, error) {
 	omiseClient, err := omiseLib.NewClient(c.publicKey.String(), c.secretKey.String())
 	if err != nil {
 		return nil, Error.NewInternalServerError(Code.FailInitOmiseClient)
