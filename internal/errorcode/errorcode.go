@@ -21,8 +21,10 @@ const (
 
 // define error code for cipher package
 const (
+	// FailReadFileContent represent error code when reading file
+	FailReadFileContent = iota + 3001
 	// FailEmptyCipherData represent error code when cipher was null or empty
-	FailEmptyCipherData = iota + 3001
+	FailEmptyCipherData
 	// FailRot128InitReader represent error code when initial reader
 	FailRot128InitReader
 	// FailRot128Decryption represent error code when rot128 decryption failed
@@ -53,4 +55,6 @@ const (
 const (
 	// FailInitOmiseClient represent error code when initial omise client failed
 	FailInitOmiseClient = iota + 5001
+	// FailChargeCard represent error code when charge was error
+	FailChargeError
 )

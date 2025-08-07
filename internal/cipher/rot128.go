@@ -2,28 +2,34 @@ package cipher
 
 import (
 	"bytes"
+	"os"
 
 	Code "github.com/Pachara-H/go-tamboon/internal/errorcode"
 	Error "github.com/Pachara-H/go-tamboon/pkg/errors"
 	"github.com/Pachara-H/go-tamboon/pkg/utilities"
 )
 
-// Rot128Decrypt decrypt cipherText with rot128 (Caesar) method
-func (a *agent) Rot128Decrypt(cipherByte []byte) ([]byte, error) {
-	if len(cipherByte) <= 0 {
-		return nil, Error.NewInternalServerError(Code.FailEmptyCipherData)
+// Rot128DecryptFileContent decrypt file content with rot128 (Caesar) method
+func (a *agent) Rot128DecryptFileContent(path string) (*utilities.SecureByte, error) {
+	contentByte, err := os.ReadFile(path) //nolint
+	if err != nil {
+		return nil, Error.NewInternalServerError(Code.FailReadFileContent)
 	}
 
-	reader, err := utilities.NewRot128Reader(bytes.NewBuffer(cipherByte))
+	if len(contentByte) <= 0 {
+		return nil, Error.NewNotFoundError(Code.FailEmptyCipherData)
+	}
+
+	reader, err := utilities.NewRot128Reader(bytes.NewBuffer(contentByte))
 	if err != nil {
 		return nil, Error.NewInternalServerError(Code.FailRot128InitReader)
 	}
 
-	buf := make([]byte, len(cipherByte))
+	buf := make([]byte, len(contentByte))
 	n, err := reader.Read(buf)
 	if err != nil || n <= 0 {
 		return nil, Error.NewInternalServerError(Code.FailRot128Decryption)
 	}
 
-	return buf[:n], nil
+	return utilities.NewSecureByte(buf[:n]), nil
 }

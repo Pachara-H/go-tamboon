@@ -1,13 +1,17 @@
 package reporter
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/shopspring/decimal"
+)
 
 // SummaryData holds summary data for reporting
 type SummaryData struct {
-	TotalReceived       int64
-	SuccessfullyDonated int64
-	FaultyDonation      int64
-	AveragePerPerson    float64
+	TotalReceived       decimal.Decimal
+	SuccessfullyDonated decimal.Decimal
+	FaultyDonation      decimal.Decimal
+	AveragePerPerson    decimal.Decimal
 	TopDonors           []string
 }
 
@@ -15,10 +19,10 @@ type SummaryData struct {
 func (a *agent) PrintSummaryReport(data SummaryData) {
 	// Print summary report
 	fmt.Println("done.")
-	fmt.Printf("Total received: %d\n", data.TotalReceived)
-	fmt.Printf("successfully donated: %d\n", data.SuccessfullyDonated)
-	fmt.Printf("faulty donation: %d\n", data.FaultyDonation)
-	fmt.Printf("average per person: %f\n", data.AveragePerPerson)
+	fmt.Printf("Total received: %d\n", data.TotalReceived.IntPart())
+	fmt.Printf("successfully donated: %d\n", data.SuccessfullyDonated.IntPart())
+	fmt.Printf("faulty donation: %d\n", data.FaultyDonation.IntPart())
+	fmt.Printf("average per person: %.2f\n", data.AveragePerPerson.InexactFloat64())
 
 	if len(data.TopDonors) <= 0 {
 		return
