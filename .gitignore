@@ -18,8 +18,5 @@ coverage.out
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-# Environment variables file
-.env**
-
 # Local data
 data/**

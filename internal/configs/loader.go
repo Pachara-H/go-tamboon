@@ -3,7 +3,6 @@ package configs
 import (
 	"encoding/base64"
 	"log"
-	"time"
 
 	Code "github.com/Pachara-H/go-tamboon/internal/errorcode"
 	"github.com/Pachara-H/go-tamboon/pkg/constants"
@@ -25,11 +24,8 @@ type Config struct {
 
 // OmiseConfig holds Omise API configuration
 type OmiseConfig struct {
-	PublicKey     *utilities.SecureString
-	SecretKey     *utilities.SecureString
-	TokenBaseURL  string
-	ChargeBaseURL string
-	Timeout       time.Duration
+	PublicKey *utilities.SecureString
+	SecretKey *utilities.SecureString
 }
 
 // LoadConfig loads configuration from environment variables
@@ -62,11 +58,8 @@ func (e *loader) loadOmiseConfig() (*OmiseConfig, error) {
 	}
 
 	return &OmiseConfig{
-		PublicKey:     utilities.NewSecureStringFromByte(pKeyByte),
-		SecretKey:     utilities.NewSecureStringFromByte(sKeyByte),
-		TokenBaseURL:  utilities.GetEnvCfgStringOrDefault("OMISE_TOKEN_BASE_URL"),
-		ChargeBaseURL: utilities.GetEnvCfgStringOrDefault("OMISE_CHARGE_BASE_URL"),
-		Timeout:       time.Duration(utilities.GetEnvCfgInt64OrDefault("OMISE_TIMEOUT") * int64(time.Second)),
+		PublicKey: utilities.NewSecureStringFromByte(pKeyByte),
+		SecretKey: utilities.NewSecureStringFromByte(sKeyByte),
 	}, nil
 }
 
