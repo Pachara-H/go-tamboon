@@ -15,7 +15,7 @@ import (
 )
 
 // ProcessDonations implement donation logic
-func (w *donationService) ProcessDonations(ctx context.Context) error { //nolint
+func (w *donationService) ProcessDonations(ctx context.Context) error {
 	// 0. defer recover
 	defer func() {
 		if x := recover(); x != nil {
@@ -53,15 +53,40 @@ func (w *donationService) ProcessDonations(ctx context.Context) error { //nolint
 	}()
 
 	// 4. call charge with goroutine
-	donations := make([]*entities.Donation, 0)
-	summary := entities.NewDonationSummary()
-
 	var wg sync.WaitGroup
 	wg.Add(len(records))
 
 	ch := make(chan *entities.Donation, len(records))
 	defer close(ch)
+	go w.asyncCharge(processingCtx, cancelProcessing, ch, &wg, records)
 
+	// 5. wait go routine all tasks
+	err = handleWaitGroup(processingCtx, cancelProcessing, &wg)
+	if err != nil {
+		return err
+	}
+
+	// 6. finally print summary report
+	donations := make([]*entities.Donation, 0)
+	summary := entities.NewDonationSummary()
+
+	length := len(ch)
+	for i := 0; i < length; i++ {
+		d, ok := <-ch
+		if !ok {
+			break
+		}
+		donations = append(donations, d)
+		summary.AddDonation(d)
+	}
+	summary.CalculateAveragePerPerson()
+	summary.GenerateTopDonors(donations, 3)
+	w.reporterAgent.PrintSummaryReport(processingCtx, summary)
+
+	return nil
+}
+
+func (w *donationService) asyncCharge(processingCtx context.Context, cancelProcessing context.CancelFunc, ch chan *entities.Donation, wg *sync.WaitGroup, records []*entities.CardDetails) { //nolint
 	sleepTime := 200 * time.Millisecond
 	errCount := int32(0) // prevent blocking from 3rd party
 
@@ -73,7 +98,12 @@ func (w *donationService) ProcessDonations(ctx context.Context) error { //nolint
 				if x := recover(); x != nil {
 					log.Printf("panic err: %+v\n", x)
 					donation.MarkAsFailed(Error.NewInternalServerError(Code.FailPanic).Error())
-					c <- donation
+
+					select {
+					case c <- donation:
+					default:
+						// do nothing
+					}
 				}
 				wg.Done()
 			}()
@@ -81,7 +111,11 @@ func (w *donationService) ProcessDonations(ctx context.Context) error { //nolint
 			select {
 			case <-processingCtx.Done():
 				donation.MarkAsFailed(Error.NewInternalServerError(Code.FailContextCancel).Error())
-				c <- donation
+				select {
+				case c <- donation:
+				default:
+					// do nothing
+				}
 				return
 			default:
 				// do nothing
@@ -109,37 +143,19 @@ func (w *donationService) ProcessDonations(ctx context.Context) error { //nolint
 				log.Printf("[SUCCESS]: charge transaction Seq.%d was success with amount: %s", idx, result.Amount)
 			}
 
-			c <- donation
+			select {
+			case c <- donation:
+			default:
+				// do nothing
+			}
 		}(ch, r)
 
 		// for prevent api rate limit
 		time.Sleep(sleepTime)
 	}
-
-	// 5. wait go routine all tasks
-	err = handleWaitGroup(processingCtx, cancelProcessing, &wg)
-	if err != nil {
-		return err
-	}
-
-	// 6. finally print summary report
-	length := len(ch)
-	for i := 0; i < length; i++ {
-		d, ok := <-ch
-		if !ok {
-			break
-		}
-		donations = append(donations, d)
-		summary.AddDonation(d)
-	}
-	summary.CalculateAveragePerPerson()
-	summary.GenerateTopDonors(donations, 3)
-	w.reporterAgent.PrintSummaryReport(processingCtx, summary)
-
-	return nil
 }
 
-func handleWaitGroup(processingCtx context.Context, cancelProcessing context.CancelFunc, wg *sync.WaitGroup) error {
+func handleWaitGroup(_ context.Context, cancelProcessing context.CancelFunc, wg *sync.WaitGroup) error {
 	allDone := make(chan struct{})
 	go func() {
 		wg.Wait()
@@ -147,12 +163,14 @@ func handleWaitGroup(processingCtx context.Context, cancelProcessing context.Can
 	}()
 
 	select {
-	case <-processingCtx.Done():
-		return nil
+	// waiting until done
+	// case <-processingCtx.Done():
+	// 	return nil
 	case <-allDone:
 		return nil
-	case <-time.After(30 * time.Second):
-		// Cancel the context to signal all goroutines and database operations to stop
+	case <-time.After(300 * time.Second):
+		// Cancel the context to signal all goroutines to stop
+		// Fatal break without waiting for summary report
 		cancelProcessing()
 		log.Println("[ERROR] Go routine process timeout")
 		return Error.NewInternalServerError(Code.FailGoroutineTimeout)
