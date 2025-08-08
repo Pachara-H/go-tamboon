@@ -3,8 +3,10 @@ package errorcode
 
 // define error code for general purpose
 const (
+	// FailPanic represent error code when panic occurs
+	FailPanic = iota + 1
 	// FailContextCancel represent error code when context was cancelled
-	FailContextCancel = iota + 1
+	FailContextCancel
 	// FailGoroutineTimeout represent error code when go routine timeout
 	FailGoroutineTimeout
 	// FailTooManyErrorOccurred represent error code when error keep occurred for a while

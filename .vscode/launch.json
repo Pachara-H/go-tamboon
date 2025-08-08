@@ -12,7 +12,7 @@
       "program": "${workspaceFolder}/main.go",
       "envFile": "${workspaceFolder}/.env",
       "args": [
-                "data/fng.1000.csv.rot128",
+                "fng2.10.csv.rot128",
             ]
     }
   ]

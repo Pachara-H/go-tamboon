@@ -7,7 +7,9 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
+	"time"
 
 	"github.com/Pachara-H/go-tamboon/internal/adapter/csv"
 	"github.com/Pachara-H/go-tamboon/internal/adapter/omise"
@@ -20,7 +22,9 @@ import (
 )
 
 func main() {
+	start := time.Now()
 	fmt.Println("performing donations...")
+	defer runtime.GC()
 
 	// Create context that can be cancelled
 	ctx, cancel := context.WithCancel(context.Background())
@@ -80,4 +84,5 @@ func main() {
 	// Wait for context cancellation (graceful shutdown)
 	<-ctx.Done()
 	log.Println("Application shutdown complete.")
+	log.Printf("Time usage = %f sec.", time.Since(start).Seconds())
 }
